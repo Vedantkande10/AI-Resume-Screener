@@ -1,0 +1,186 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  color: #172033;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* Navbar */
+
+.navbar {
+  height: 70px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8%;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+  color: #555;
+}
+
+.nav-links span {
+  cursor: pointer;
+}
+
+/* Hero */
+
+.hero {
+  text-align: center;
+  padding: 70px 20px 45px;
+}
+
+.hero h1 {
+  font-size: 45px;
+  margin-bottom: 15px;
+}
+
+.hero p {
+  font-size: 18px;
+  color: #666;
+}
+
+/* Main */
+
+.screening-container {
+  width: 85%;
+  max-width: 1100px;
+  margin: auto;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+/* Cards */
+
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  border: 1px solid #e5e7eb;
+}
+
+.card h2 {
+  margin-bottom: 10px;
+}
+
+.description {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+/* Upload */
+
+.upload-box {
+  height: 230px;
+  border: 2px dashed #aaa;
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 15px;
+  cursor: pointer;
+
+  color: #555;
+}
+
+.upload-box:hover {
+  border-color: #333;
+}
+
+.upload-box input {
+  display: none;
+}
+
+.upload-icon {
+  font-size: 45px;
+}
+
+/* Textarea */
+
+textarea {
+  width: 100%;
+  height: 230px;
+
+  resize: none;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  padding: 15px;
+
+  font-size: 14px;
+
+  outline: none;
+}
+
+textarea:focus {
+  border-color: #555;
+}
+
+/* Button */
+
+.analyze-section {
+  text-align: center;
+  padding: 40px;
+}
+
+.analyze-button {
+  padding: 15px 35px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #172033;
+  color: white;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+.analyze-button:hover {
+  opacity: 0.85;
+}
+
+/* Mobile */
+
+@media (max-width: 768px) {
+
+  .screening-container {
+    grid-template-columns: 1fr;
+    width: 90%;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .hero h1 {
+    font-size: 32px;
+  }
+
+}
