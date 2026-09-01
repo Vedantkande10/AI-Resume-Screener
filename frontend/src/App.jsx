@@ -592,12 +592,12 @@ const containsKeyword = (text, keyword) => {
         formData.append("file", resume);
 
         const response = await fetch(
-          "http://127.0.0.1:8000/upload-resume",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+  "https://ai-resume-screener-0fmn.onrender.com/upload-resume",
+  {
+    method: "POST",
+    body: formData,
+  }
+);
 
         if (!response.ok) {
           throw new Error(
@@ -606,6 +606,8 @@ const containsKeyword = (text, keyword) => {
         }
 
         const data = await response.json();
+        console.log("BACKEND RESPONSE:", data);
+console.log("EXTRACTED RESUME TEXT:", data.text);
 
         const resumeText = (data.text || "")
           .toLowerCase()
