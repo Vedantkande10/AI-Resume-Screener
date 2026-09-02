@@ -1,6 +1,13 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-app = FastAPI()
+from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+import fitz
+from docx import Document
+import io
+
+app = FastAPI(title="AI Resume Screener API")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -11,12 +18,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-import fitz
-from docx import Document
-import io
-
-app = FastAPI(title="AI Resume Screener API")
-
 
 # Allow React frontend to connect
 app.add_middleware(
