@@ -565,6 +565,31 @@ button {
   font-size: 12px;
 }
 
+.ai-score-inline {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ai-score-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #5965f2;
+}
+
+.ai-score-label {
+  font-size: 10px;
+  color: #737c8d;
+}
+
+.best-ai-summary {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #555e70;
+  line-height: 1.5;
+}
+
 
 /* ==============================
    SKILL BADGES
@@ -818,6 +843,46 @@ button {
   color: #bd4545;
   border-radius: 8px;
   font-size: 12px;
+}
+
+/* ==============================
+   AI ANALYSIS
+   ============================== */
+
+.ai-analysis-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #edf0f4;
+}
+
+.ai-analysis-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ai-analysis-header h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5965f2;
+}
+
+.ai-score-pill {
+  background: #5965f2;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ai-summary {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #555e70;
+  line-height: 1.6;
 }
 
 

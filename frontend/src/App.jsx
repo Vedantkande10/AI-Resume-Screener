@@ -1,5 +1,10 @@
 import { useState } from "react";
 import "./App.css";
+import ComparisonGraph from "./components/ComparisonGraph.jsx";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://ai-resume-screener-0fmn.onrender.com";
 // ==================================================
 // SKILL MATCH PIE CHART
 // ==================================================
@@ -592,12 +597,12 @@ const containsKeyword = (text, keyword) => {
         formData.append("file", resume);
 
         const response = await fetch(
-  "https://ai-resume-screener-0fmn.onrender.com/upload-resume",
-  {
-    method: "POST",
-    body: formData,
-  }
-);
+          `${API_BASE_URL}/upload-resume`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           throw new Error(
@@ -696,7 +701,54 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
           extractCandidateExperience(resumeText);
 
         // --------------------------------------------
-        // 10. STORE RAW RESULT
+        // 10. AI ANALYSIS
+        // --------------------------------------------
+        let aiMatchPercentage = null;
+        let aiSummary = "";
+        let aiStrengths = [];
+        let aiGaps = [];
+
+        try {
+          const aiFormData = new FormData();
+          aiFormData.append(
+            "job_description",
+            jobDescription
+          );
+          aiFormData.append("resume_text", data.text || "");
+
+          const aiResponse = await fetch(
+            `${API_BASE_URL}/analyze-resume`,
+            {
+              method: "POST",
+              body: aiFormData,
+            }
+          );
+
+          if (aiResponse.ok) {
+            const aiData = await aiResponse.json();
+            aiMatchPercentage = aiData.match_percentage;
+            aiSummary = aiData.summary || "";
+            aiStrengths = aiData.strengths || [];
+            aiGaps = aiData.gaps || [];
+          } else if (aiResponse.status === 503) {
+            console.warn(
+              "AI analysis unavailable (API key not set)."
+            );
+          } else {
+            console.error(
+              "AI analysis failed:",
+              aiResponse.status
+            );
+          }
+        } catch (aiError) {
+          console.error(
+            "AI analysis error for resume:",
+            aiError
+          );
+        }
+
+        // --------------------------------------------
+        // 11. STORE RAW RESULT
         // --------------------------------------------
         resumeData.push({
           fileName: resume.name,
@@ -708,6 +760,10 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
           matchedSkills: matchedSkills,
           missingSkills: missingSkills,
           recommendation: "",
+          aiMatchPercentage: aiMatchPercentage,
+          aiSummary: aiSummary,
+          aiStrengths: aiStrengths,
+          aiGaps: aiGaps,
         });
       } catch (resumeError) {
         console.error(
@@ -726,6 +782,10 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
           missingSkills: requiredSkills,
           recommendation: "Analysis Failed",
           error: resumeError.message,
+          aiMatchPercentage: null,
+          aiSummary: "",
+          aiStrengths: [],
+          aiGaps: [],
         });
       }
     }
@@ -777,13 +837,23 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
     // --------------------------------------------
     // 12. FINAL SCORE
     //
-    // SKILLS      = 70%
-    // EXPERIENCE  = 30%
+    // KEYWORD SCORE = SKILLS 70% + EXPERIENCE 30%
+    // AI SCORE      = 40% (when available)
+    // FINAL         = KEYWORD 60% + AI 40%
     // --------------------------------------------
     resumeData.forEach((candidate) => {
-      const finalScore =
+      const keywordScore =
         candidate.skillScore * 0.70 +
         candidate.experienceScore * 0.30;
+
+      const hasAiScore =
+        candidate.aiMatchPercentage !== null &&
+        candidate.aiMatchPercentage !== undefined;
+
+      const finalScore = hasAiScore
+        ? keywordScore * 0.6 +
+          candidate.aiMatchPercentage * 0.4
+        : keywordScore;
 
       candidate.score = Math.round(finalScore);
 
@@ -1237,11 +1307,12 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
                   Candidate Ranking
                 </h2>
 
-                <p>
-                  Candidates are ranked according
-                  to their match with the required
-                  job skills.
-                </p>
+                 <p>
+                   Candidates are ranked according
+                   to their match with the required
+                   job skills, combined with AI-powered
+                   resume analysis.
+                 </p>
 
               </div>
 
@@ -1258,11 +1329,20 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
 
               </div>
 
-            </div>
+             </div>
 
 
-            {/* =================================================
-                BEST CANDIDATE
+             {/* =================================================
+                 COMPARISON GRAPH
+             ================================================= */}
+
+             <ComparisonGraph
+               results={analysisResults}
+             />
+
+
+             {/* =================================================
+                 BEST CANDIDATE
             ================================================= */}
 
             {analysisResults.length > 0 && (
@@ -1314,19 +1394,39 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
                   </div>
 
 
-                  <div className="best-score">
+                   <div className="best-score">
 
-                    <strong>
-                      {analysisResults[0].score}%
-                    </strong>
+                     <strong>
+                       {analysisResults[0].score}%
+                     </strong>
 
-                    <span>
-                      Match Score
-                    </span>
+                     <span>
+                       Match Score
+                     </span>
 
-                  </div>
+                     {analysisResults[0].aiMatchPercentage !==
+                       null &&
+                       analysisResults[0].aiMatchPercentage !==
+                       undefined && (
+                       <div className="ai-score-inline">
+                         <span className="ai-score-value">
+                           {analysisResults[0].aiMatchPercentage}%
+                         </span>
+                         <span className="ai-score-label">
+                           AI Match
+                         </span>
+                       </div>
+                      )}
 
-                </div>
+                    </div>
+
+                    {analysisResults[0].aiSummary && (
+                     <div className="best-ai-summary">
+                       {analysisResults[0].aiSummary}
+                     </div>
+                   )}
+
+                 </div>
 
               </div>
             )}
@@ -1611,18 +1711,102 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
 
                       </div>
 
-                    </div>
+                     </div>
 
 
-                    {result.error && (
-                      <div className="resume-error">
-                        ⚠ {result.error}
-                      </div>
-                    )}
+                     {/* AI Analysis */}
 
-                  </div>
+                     {result.aiMatchPercentage !==
+                       null &&
+                       result.aiMatchPercentage !==
+                       undefined && (
+                       <div className="ai-analysis-section">
 
-                )
+                         <div className="ai-analysis-header">
+
+                           <h4>
+                             🤖 AI Analysis
+                           </h4>
+
+                           <div className="ai-score-pill">
+                             {result.aiMatchPercentage}%
+                           </div>
+
+                         </div>
+
+                         {result.aiSummary && (
+                           <p className="ai-summary">
+                             {result.aiSummary}
+                           </p>
+                         )}
+
+                         {result.aiStrengths &&
+                           result.aiStrengths.length >
+                           0 && (
+                           <div className="skill-section">
+
+                             <h4>
+                               ✓ AI-Identified Strengths
+                             </h4>
+
+                             <div className="skill-badges">
+
+                               {result.aiStrengths.map(
+                                 (strength, sIdx) => (
+                                   <span
+                                     className="skill-badge matched"
+                                     key={`strength-${sIdx}`}
+                                   >
+                                     ✓ {strength}
+                                   </span>
+                                 )
+                               )}
+
+                             </div>
+
+                           </div>
+                         )}
+
+                         {result.aiGaps &&
+                           result.aiGaps.length >
+                           0 && (
+                           <div className="skill-section">
+
+                             <h4>
+                               ⚠ AI-Identified Gaps
+                             </h4>
+
+                             <div className="skill-badges">
+
+                               {result.aiGaps.map(
+                                 (gap, gIdx) => (
+                                   <span
+                                     className="skill-badge missing"
+                                     key={`gap-${gIdx}`}
+                                   >
+                                     {gap}
+                                   </span>
+                                 )
+                               )}
+
+                             </div>
+
+                           </div>
+                          )}
+
+                        </div>
+                       )}
+
+
+                     {result.error && (
+                       <div className="resume-error">
+                         ⚠ {result.error}
+                       </div>
+                     )}
+
+                   </div>
+
+                 )
               )}
 
             </div>

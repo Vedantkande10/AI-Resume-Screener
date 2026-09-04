@@ -1,0 +1,100 @@
+.comparison-graph {
+  background: white;
+  border: 1px solid #e5e8ef;
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 30px rgba(30, 40, 70, 0.05);
+}
+
+.comparison-graph h3 {
+  margin: 0 0 24px;
+  font-size: 21px;
+  font-weight: 800;
+  color: #172033;
+}
+
+.comparison-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.comparison-row {
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  align-items: center;
+  gap: 15px;
+}
+
+.comparison-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rank-tag {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef1ff;
+  color: #5965f2;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.candidate-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #172033;
+}
+
+.comparison-bar-wrapper {
+  background: #f0f2f7;
+  border-radius: 10px;
+  height: 36px;
+  overflow: hidden;
+  position: relative;
+}
+
+.comparison-bar {
+  height: 100%;
+  min-width: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  transition: width 0.5s ease;
+}
+
+.comparison-bar-text {
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ai-badge {
+  font-size: 11px;
+  color: #5965f2;
+  background: #eef1ff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .comparison-row {
+    grid-template-columns: 1fr 1fr auto;
+  }
+
+  .comparison-label {
+    justify-content: flex-start;
+  }
+
+  .candidate-name {
+    display: none;
+  }
+}

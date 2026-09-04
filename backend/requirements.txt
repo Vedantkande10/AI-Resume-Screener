@@ -3,3 +3,4 @@ uvicorn
 PyMuPDF
 python-docx
 python-multipart
+python-dotenv
