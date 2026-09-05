@@ -14,87 +14,101 @@
   color: #172033;
 }
 
-.comparison-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.line-chart-wrapper {
+  width: 100%;
+  overflow-x: auto;
 }
 
-.comparison-row {
-  display: grid;
-  grid-template-columns: 200px 1fr auto;
-  align-items: center;
-  gap: 15px;
+.line-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 360px;
+  max-height: 420px;
 }
 
-.comparison-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.grid-line {
+  stroke: #eef0f6;
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
 }
 
-.rank-tag {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #eef1ff;
-  color: #5965f2;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 800;
+.axis-line {
+  stroke: #d4d9e4;
+  stroke-width: 1;
 }
 
-.candidate-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #172033;
-}
-
-.comparison-bar-wrapper {
-  background: #f0f2f7;
-  border-radius: 10px;
-  height: 36px;
-  overflow: hidden;
-  position: relative;
-}
-
-.comparison-bar {
-  height: 100%;
-  min-width: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  padding-left: 12px;
-  transition: width 0.5s ease;
-}
-
-.comparison-bar-text {
+.axis-label {
+  font-family: Inter, Arial, sans-serif;
   font-size: 11px;
+  fill: #7c8494;
+  font-weight: 600;
+}
+
+.axis-label.y-label {
+  font-size: 11px;
+}
+
+.axis-label.x-label {
+  font-size: 11px;
+  fill: #4f5870;
+}
+
+.axis-label.x-label-rank {
+  font-size: 10px;
+  fill: #9299a8;
   font-weight: 700;
-  white-space: nowrap;
 }
 
-.ai-badge {
+.axis-title {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  fill: #4f5870;
+}
+
+.data-point {
+  cursor: pointer;
+  transition: r 0.15s ease;
+}
+
+.hover-target {
+  cursor: pointer;
+  outline: none;
+}
+
+.hover-target:focus {
+  outline: none;
+}
+
+.tooltip {
+  pointer-events: none;
+}
+
+.tooltip-name {
+  font-family: Inter, Arial, sans-serif;
   font-size: 11px;
-  color: #5965f2;
-  background: #eef1ff;
-  padding: 4px 10px;
-  border-radius: 12px;
   font-weight: 600;
+  fill: #c8cef0;
+}
+
+.tooltip-score {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  fill: #ffffff;
 }
 
 @media (max-width: 600px) {
-  .comparison-row {
-    grid-template-columns: 1fr 1fr auto;
+  .comparison-graph {
+    padding: 20px;
   }
 
-  .comparison-label {
-    justify-content: flex-start;
+  .line-chart-svg {
+    min-width: 320px;
   }
 
-  .candidate-name {
-    display: none;
+  .axis-label.x-label {
+    font-size: 10px;
   }
 }

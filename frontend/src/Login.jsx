@@ -1,34 +1,107 @@
 import { useState } from "react";
 import "./Login.css";
 
-function Login({ onLogin }) {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
-  const handleSubmit = (event) => {
+function Login({ onLogin }) {
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setError("");
 
     const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
 
-    // Empty email validation
     if (!trimmedEmail) {
       setError("Please enter your email address.");
       return;
     }
 
-    // Email validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!emailPattern.test(trimmedEmail)) {
       setError("Please enter a valid email address.");
       return;
     }
 
-    // Clear error
-    setError("");
+    if (!trimmedPassword) {
+      setError("Please enter your password.");
+      return;
+    }
 
-    // Login successful
-    onLogin(trimmedEmail);
+    if (trimmedPassword.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (isRegister) {
+      if (trimmedPassword !== confirmPassword.trim()) {
+        setError("Passwords do not match.");
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const formData = new FormData();
+        formData.append("email", trimmedEmail);
+        formData.append("password", trimmedPassword);
+
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Registration failed");
+        }
+
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        onLogin(data.user);
+      } catch (err) {
+        setError(err.message || "Registration failed. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("username", trimmedEmail);
+      formData.append("password", trimmedPassword);
+
+      const response = await fetch(`${API_BASE_URL}/auth/token`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Login failed");
+      }
+
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      onLogin(data.user);
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,19 +109,20 @@ function Login({ onLogin }) {
 
       <div className="login-card">
 
-        {/* LOGO */}
         <div className="login-logo">
           🤖
         </div>
 
-        {/* TITLE */}
-        <h1>AI Resume Screener</h1>
+        <h1>
+          {isRegister ? "Create Account" : "AI Resume Screener"}
+        </h1>
 
         <p className="login-subtitle">
-          Sign in to analyze and rank candidates
+          {isRegister
+            ? "Sign up to analyze and rank candidates"
+            : "Sign in to analyze and rank candidates"}
         </p>
 
-        {/* LOGIN FORM */}
         <form onSubmit={handleSubmit} className="login-form">
 
           <div className="input-group">
@@ -79,7 +153,64 @@ function Login({ onLogin }) {
 
           </div>
 
-          {/* ERROR MESSAGE */}
+          <div className="input-group">
+
+            <label htmlFor="password">
+              Password
+            </label>
+
+            <div className="input-wrapper">
+
+              <span className="input-icon">
+                🔒
+              </span>
+
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setError("");
+                }}
+                autoComplete={isRegister ? "new-password" : "current-password"}
+              />
+
+            </div>
+
+          </div>
+
+          {isRegister && (
+            <div className="input-group">
+
+              <label htmlFor="confirmPassword">
+                Confirm Password
+              </label>
+
+              <div className="input-wrapper">
+
+                <span className="input-icon">
+                  🔒
+                </span>
+
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(event) => {
+                    setConfirmPassword(event.target.value);
+                    setError("");
+                  }}
+                  autoComplete="new-password"
+                />
+
+              </div>
+
+            </div>
+          )}
+
           {error && (
             <div className="login-error">
               <span>⚠</span>
@@ -87,18 +218,48 @@ function Login({ onLogin }) {
             </div>
           )}
 
-          {/* LOGIN BUTTON */}
           <button
             type="submit"
             className="login-button"
+            disabled={loading}
           >
-            <span>Continue to Dashboard</span>
-            <span className="button-arrow">→</span>
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                <span>{isRegister ? "Creating Account..." : "Signing in..."}</span>
+              </>
+            ) : (
+              <>
+                <span>{isRegister ? "Create Account" : "Continue to Dashboard"}</span>
+                <span className="button-arrow">→</span>
+              </>
+            )}
           </button>
 
         </form>
 
-        {/* FOOTER MESSAGE */}
+        <div style={{ marginTop: "18px", fontSize: "13px", color: "#64748b" }}>
+          {isRegister ? "Already have an account? " : "Don't have an account? "}
+          <button
+            type="button"
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setError("");
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#6366f1",
+              fontWeight: 700,
+              cursor: "pointer",
+              padding: 0,
+              fontSize: "13px",
+            }}
+          >
+            {isRegister ? "Sign in" : "Register"}
+          </button>
+        </div>
+
         <div className="login-footer">
 
           <span className="secure-icon">
@@ -106,16 +267,15 @@ function Login({ onLogin }) {
           </span>
 
           <p>
-            Your email is used only for accessing
-            <br />
-            the resume screening dashboard.
+            {isRegister
+              ? "Create an account to save and manage your screening results."
+              : "Your email is used only for accessing the resume screening dashboard."}
           </p>
 
         </div>
 
       </div>
 
-      {/* BOTTOM BRANDING */}
       <p className="login-branding">
         AI-powered resume analysis & candidate ranking
       </p>

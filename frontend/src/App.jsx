@@ -1,10 +1,42 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import "./App.css";
 import ComparisonGraph from "./components/ComparisonGraph.jsx";
+import HistoryList from "./components/HistoryList.jsx";
+import ApplicationDetails from "./components/ApplicationDetails.jsx";
+import Login from "./Login.jsx";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://ai-resume-screener-0fmn.onrender.com";
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
+async function apiCall(endpoint, options = {}) {
+  const token = localStorage.getItem("access_token");
+  const headers = {
+    ...options.headers,
+  };
+
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const config = {
+    ...options,
+    headers,
+  };
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+  if (response.status === 401) {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user");
+    window.location.reload();
+  }
+
+  return response;
+}
 // ==================================================
 // SKILL MATCH PIE CHART
 // ==================================================
@@ -345,9 +377,8 @@ function getRecommendation(score) {
 // --------------------------------------------------
 
 function App() {
-  // LOGIN
   const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("isLoggedIn") === "true"
+    !!localStorage.getItem("access_token")
   );
 
   const [email, setEmail] = useState("");
@@ -355,33 +386,19 @@ function App() {
   // APPLICATION
   const [resumes, setResumes] = useState([]);
   const [jobDescription, setJobDescription] = useState("");
-
   const [analysisResults, setAnalysisResults] = useState([]);
-
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [view, setView] = useState("dashboard");
+  const [selectedApplicationId, setSelectedApplicationId] = useState(null);
 
   // --------------------------------------------------
   // LOGIN
   // --------------------------------------------------
 
-  const handleLogin = (event) => {
-    event.preventDefault();
-
-    if (!email.trim()) {
-      alert("Please enter your email address.");
-      return;
-    }
-
-    if (!email.includes("@")) {
-      alert("Please enter a valid email address.");
-      return;
-    }
-
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("userEmail", email);
-
+  const handleLogin = (user) => {
     setIsLoggedIn(true);
   };
 
@@ -391,16 +408,66 @@ function App() {
   // --------------------------------------------------
 
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userEmail");
-
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user");
     setIsLoggedIn(false);
-
     setResumes([]);
     setAnalysisResults([]);
     setJobDescription("");
+    setView("dashboard");
+    setSelectedApplicationId(null);
   };
 
+
+  const saveResultsToBackend = async () => {
+    if (!analysisResults || analysisResults.length === 0) {
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("job_description", jobDescription);
+      formData.append("resume_texts", JSON.stringify(resumes.map(r => r.name)));
+      formData.append("analysis_results", JSON.stringify(analysisResults));
+
+      const response = await apiCall("/applications", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || "Failed to save results");
+      }
+
+      setSaveMessage("Results saved successfully!");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (err) {
+      console.error("Save error:", err);
+      setSaveMessage("Failed to save results");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleViewHistory = () => {
+    setView("history");
+    setSelectedApplicationId(null);
+  };
+
+  const handleViewApplication = (id) => {
+    setSelectedApplicationId(id);
+    setView("details");
+  };
+
+  const handleBackToDashboard = () => {
+    setView("dashboard");
+    setSelectedApplicationId(null);
+  };
 
   // --------------------------------------------------
   // UPLOAD RESUMES
@@ -930,6 +997,9 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
     // 16. SAVE RESULTS
     // --------------------------------------------
     setAnalysisResults(finalResults);
+
+    // Save to backend
+    saveResultsToBackend();
   } catch (error) {
     console.error("Analysis error:", error);
 
@@ -952,55 +1022,7 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
 
   if (!isLoggedIn) {
     return (
-      <div className="login-page">
-
-        <div className="login-card">
-
-          <div className="login-icon">
-            🤖
-          </div>
-
-          <h1>
-            AI Resume Screener
-          </h1>
-
-          <p className="login-subtitle">
-            Smart candidate screening and ranking
-          </p>
-
-
-          <form onSubmit={handleLogin}>
-
-            <label>
-              Email Address
-            </label>
-
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-            />
-
-            <button
-              type="submit"
-              className="primary-button login-button"
-            >
-              Continue
-            </button>
-
-          </form>
-
-
-          <p className="login-note">
-            No password required
-          </p>
-
-        </div>
-
-      </div>
+      <Login onLogin={handleLogin} />
     );
   }
 
@@ -1040,8 +1062,16 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
         <div className="nav-right">
 
           <span className="user-email">
-            {localStorage.getItem("userEmail")}
+            {typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user") || "{}").email || localStorage.getItem("userEmail") : ""}
           </span>
+
+          <button
+            className="logout-button"
+            onClick={handleViewHistory}
+            title="Application History"
+          >
+            📋 History
+          </button>
 
           <button
             className="logout-button"
@@ -1090,6 +1120,8 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
 
       <main className="container">
 
+        {view === "dashboard" && (
+          <>
 
         {/* =================================================
             JOB DESCRIPTION
@@ -1275,6 +1307,13 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
 
         </button>
 
+
+        {/* Save message */}
+        {saveMessage && (
+          <div className={`save-message ${saveMessage.includes("Failed") ? "error" : "success"}`}>
+            {saveMessage}
+          </div>
+        )}
 
         {/* Error */}
 
@@ -1813,6 +1852,24 @@ console.log("EXTRACTED RESUME TEXT:", data.text);
 
 
           </section>
+        )}
+          </>
+        )}
+
+        {view === "history" && (
+          <HistoryList
+            accessToken={localStorage.getItem("access_token")}
+            onViewApplication={handleViewApplication}
+            onBack={handleBackToDashboard}
+          />
+        )}
+
+        {view === "details" && selectedApplicationId && (
+          <ApplicationDetails
+            applicationId={selectedApplicationId}
+            accessToken={localStorage.getItem("access_token")}
+            onBack={handleBackToDashboard}
+          />
         )}
 
       </main>

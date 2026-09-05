@@ -4,3 +4,7 @@ PyMuPDF
 python-docx
 python-multipart
 python-dotenv
+sqlalchemy
+passlib[bcrypt]
+python-jose[cryptography]
+bcrypt
