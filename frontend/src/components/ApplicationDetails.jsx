@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+  import.meta.env.VITE_API_BASE_URL || "https://ai-resume-screener-0fmn.onrender.com";
 
 function ApplicationDetails({ applicationId, accessToken, onBack }) {
   const [application, setApplication] = useState(null);
